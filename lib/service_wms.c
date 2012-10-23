@@ -267,6 +267,12 @@ void _create_capabilities_wms(mapcache_context *ctx, mapcache_request_get_capabi
       ezxml_set_txt(ezxml_add_child(layerxml,"SRS",0),grid->srs);
 
       for(j=0; j<gridlink->grid->srs_aliases->nelts; j++) {
+        bboxxml = ezxml_add_child(layerxml,"BoundingBox",0);
+        ezxml_set_attr(bboxxml,"SRS", APR_ARRAY_IDX(gridlink->grid->srs_aliases,j,char*));
+        ezxml_set_attr(bboxxml,"minx",apr_psprintf(ctx->pool,"%f",extent->minx));
+        ezxml_set_attr(bboxxml,"miny",apr_psprintf(ctx->pool,"%f",extent->miny));
+        ezxml_set_attr(bboxxml,"maxx",apr_psprintf(ctx->pool,"%f",extent->maxx));
+        ezxml_set_attr(bboxxml,"maxy",apr_psprintf(ctx->pool,"%f",extent->maxy));
         ezxml_set_txt(ezxml_add_child(layerxml,"SRS",0),APR_ARRAY_IDX(gridlink->grid->srs_aliases,j,char*));
       }
 
