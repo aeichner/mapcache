@@ -53,7 +53,7 @@ typedef unsigned long int uint64_t;
 typedef struct _mapcache_buffer_closure _mapcache_buffer_closure;
 struct _mapcache_buffer_closure {
   mapcache_buffer *buffer;
-  unsigned char *ptr;
+  char *ptr;
 };
 
 void _mapcache_imageio_png_write_func(png_structp png_ptr, png_bytep data, png_size_t length)

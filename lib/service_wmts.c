@@ -302,7 +302,7 @@ void _create_capabilities_wmts(mapcache_context *ctx, mapcache_request_get_capab
     }
 
     for(level=0; level<grid->nlevels; level++) {
-      double scaledenom,tlx,tly;
+      double scaledenom,tlx = 0,tly = 0;
       mapcache_grid_level *glevel = grid->levels[level];
       ezxml_t tm = ezxml_add_child(tmset,"TileMatrix",0);
       ezxml_set_txt(ezxml_add_child(tm,"ows:Identifier",0),apr_psprintf(ctx->pool,"%d",level));
