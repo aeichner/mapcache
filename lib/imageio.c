@@ -37,7 +37,7 @@
 int mapcache_imageio_is_valid_format(mapcache_context *ctx, mapcache_buffer *buffer)
 {
   mapcache_image_format_type t = mapcache_imageio_header_sniff(ctx,buffer);
-  if(t==GC_PNG || t==GC_JPEG) {
+  if(t==GC_PNG || t==GC_JPEG || t==GC_GIF) {
     return MAPCACHE_TRUE;
   } else {
     return MAPCACHE_FALSE;
@@ -53,6 +53,8 @@ mapcache_image_format_type mapcache_imageio_header_sniff(mapcache_context *ctx, 
     return GC_PNG;
   } else if(buffer->size >= 2 && ((unsigned char*)buffer->buf)[0] == 0xFF && ((unsigned char*)buffer->buf)[1] == 0xD8) {
     return GC_JPEG;
+  } else if(buffer->size >= 3 && buffer->buf[0] == 'G' && buffer->buf[1] == 'I' && buffer->buf[2] == 'F') {
+    return GC_GIF;
   } else {
     return GC_UNKNOWN;
   }
@@ -67,6 +69,8 @@ mapcache_image* mapcache_imageio_decode(mapcache_context *ctx, mapcache_buffer *
     return _mapcache_imageio_png_decode(ctx,buffer);
   } else if(type == GC_JPEG) {
     return _mapcache_imageio_jpeg_decode(ctx,buffer);
+  } else if(type == GC_GIF) {
+    return _mapcache_imageio_gif_decode(ctx,buffer);
   } else {
     ctx->set_error(ctx, 500, "mapcache_imageio_decode: unrecognized image format");
     return NULL;
@@ -95,6 +99,8 @@ void mapcache_imageio_decode_to_image(mapcache_context *ctx, mapcache_buffer *bu
     _mapcache_imageio_png_decode_to_image(ctx,buffer,image);
   } else if(type == GC_JPEG) {
     _mapcache_imageio_jpeg_decode_to_image(ctx,buffer,image);
+  } else if(type == GC_GIF) {
+    _mapcache_imageio_gif_decode_to_image(ctx,buffer,image);
   } else {
     ctx->set_error(ctx, 500, "mapcache_imageio_decode: unrecognized image format");
   }
