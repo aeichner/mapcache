@@ -265,7 +265,7 @@ void mapcache_image_metatile_split(mapcache_context *ctx, mapcache_metatile *mt)
     mapcache_image *tileimg;
     mapcache_image *metatile;
     int i,j;
-    int sx,sy;
+    int sx = 0,sy = 0;
     if(mt->map.raw_image) {
       metatile = mt->map.raw_image;
     } else {

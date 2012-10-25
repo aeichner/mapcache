@@ -34,7 +34,7 @@
 static void _mapcache_buffer_realloc(mapcache_buffer *buffer, size_t len)
 {
   if(buffer->avail) {
-    unsigned char* newbuf ;
+    char* newbuf ;
     while ( len > buffer->avail ) {
       buffer->avail += buffer->avail;
     }

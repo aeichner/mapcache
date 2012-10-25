@@ -93,7 +93,7 @@ static void _mapcache_imageio_jpeg_term_source(j_decompress_ptr cinfo)
 
 
 
-int _mapcache_imageio_jpeg_mem_src (j_decompress_ptr cinfo, unsigned char * inbuffer, unsigned long insize)
+int _mapcache_imageio_jpeg_mem_src (j_decompress_ptr cinfo, char * inbuffer, unsigned long insize)
 {
   struct jpeg_source_mgr * src;
 

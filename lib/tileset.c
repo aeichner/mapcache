@@ -270,7 +270,7 @@ mapcache_image* mapcache_tileset_assemble_map_tiles(mapcache_context *ctx, mapca
 
   /* copy the tiles data into the src image */
   for(i=0; i<ntiles; i++) {
-    int ox,oy; /* the offset from the start of the src image to the start of the tile */
+    int ox = 0,oy = 0; /* the offset from the start of the src image to the start of the tile */
     mapcache_image fakeimg;
     mapcache_tile *tile = tiles[i];
     switch(grid_link->grid->origin) {
