@@ -949,6 +949,44 @@ AC_DEFUN([JPEG_CHECK],[
     AC_SUBST(JPEG_INC,$JPEG_INC)
     AC_SUBST(JPEG_LIB,$JPEG_LIB)
 ])
+
+AC_DEFUN([GIF_CHECK],[
+    AC_ARG_WITH(gif,
+        AC_HELP_STRING([--with-gif@<:@=DIR@:>@],[Specify where GIF is installed]),
+        GIF_DIR=$withval,GIF_DIR='')
+
+    if test "$with_gif" = "no" -o "$with_gif" = "" ; then
+      AC_MSG_RESULT(no)
+      GIF_ENABLED=""
+    else
+      AC_EXPAND_PATH($GIF_DIR, GIF_DIR)
+      AC_CHECKING(where GIF is installed)
+      GIF_LIB=''
+      GIF_INC=''
+      GIF_ENABLED="-DUSE_GIF"
+      if test "$with_gif" = "yes" ; then
+        AC_CHECK_HEADER([gif_lib.h],
+          [
+            libs_save="$LIBS"
+            LIBS=""
+            AC_SEARCH_LIBS([DGifOpen],[gif ungif],[GIF_LIB="$LIBS"])
+            LIBS="$libs_save"
+          ],
+          [
+            AC_MSG_ERROR([gif support requested but not found. Try installing the GIF development headers])
+          ]
+        )
+      else
+        GIF_INC="-I${GIF_DIR}/include"
+        GIF_LIB="-l${GIF_DIR}/lib"
+      fi
+    fi
+
+    AC_SUBST(GIF_INC,$GIF_INC)
+    AC_SUBST(GIF_LIB,$GIF_LIB)
+    AC_SUBST(GIF_ENABLED,"$GIF_ENABLED")
+])
+
 # ===========================================================================
 #    http://www.gnu.org/software/autoconf-archive/ax_compare_version.html
 # ===========================================================================
@@ -1775,6 +1813,7 @@ PNG_CHECK
 
 JPEG_CHECK
 TIFF_CHECK
+GIF_CHECK
 GEOTIFF_CHECK
 
 PCRE_CHECK
