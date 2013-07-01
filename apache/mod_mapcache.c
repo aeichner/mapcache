@@ -30,6 +30,7 @@
 /*
  * Include the core server components.
  */
+#include "mod_mapcache-config.h"
 #include <httpd.h>
 #include <http_core.h>
 #include <http_config.h>
@@ -37,7 +38,6 @@
 #include <http_request.h>
 #include <apr_strings.h>
 #include <apr_time.h>
-#include <ap_mpm.h>
 #include <http_log.h>
 #include "mapcache.h"
 #ifdef APR_HAS_THREADS
@@ -253,11 +253,7 @@ static void mod_mapcache_child_init(apr_pool_t *pool, server_rec *s)
 {
   pchild = pool;
 #ifdef APR_HAS_THREADS
-  int threaded;
-  ap_mpm_query(AP_MPMQ_IS_THREADED,&threaded);
-  if(threaded) {
-    apr_thread_mutex_create(&thread_mutex,APR_THREAD_MUTEX_DEFAULT,pool);
-  }
+  apr_thread_mutex_create(&thread_mutex,APR_THREAD_MUTEX_DEFAULT,pool);
 #endif
 }
 
@@ -347,7 +343,7 @@ static int mod_mapcache_post_config(apr_pool_t *p, apr_pool_t *plog, apr_pool_t 
     return 1;
   }
 
-#ifndef DISABLE_VERSION_STRING
+#ifdef USE_VERSION_STRING
   ap_add_version_component(p, MAPCACHE_USERAGENT);
 #endif
 

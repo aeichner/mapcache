@@ -163,8 +163,6 @@ void _create_capabilities_wms(mapcache_context *ctx, mapcache_request_get_capabi
 
   vendorxml = ezxml_add_child(capxml,"VendorSpecificCapabilities",0);
   toplayer = ezxml_add_child(capxml,"Layer",0);
-  tmpxml = ezxml_add_child(toplayer,"Name",0);
-  ezxml_set_txt(tmpxml,"rootlayer");
   tmpxml = ezxml_add_child(toplayer,"Title",0);
   ezxml_set_txt(tmpxml,title);
 
@@ -201,15 +199,17 @@ void _create_capabilities_wms(mapcache_context *ctx, mapcache_request_get_capabi
 
     layerxml = ezxml_add_child(toplayer,"Layer",0);
     ezxml_set_attr(layerxml, "cascaded", "1");
-    ezxml_set_attr(layerxml, "queryable", (tileset->source && tileset->source->info_formats)?"1":"0"),
-                   ezxml_set_txt(ezxml_add_child(layerxml,"Name",0),tileset->name);
-
+    ezxml_set_attr(layerxml, "queryable", (tileset->source && tileset->source->info_formats)?"1":"0");
+    
+    ezxml_set_txt(ezxml_add_child(layerxml,"Name",0),tileset->name);
     tsxml = ezxml_add_child(vendorxml, "TileSet",0);
 
     /*optional layer title*/
     title = apr_table_get(tileset->metadata,"title");
     if(title) {
       ezxml_set_txt(ezxml_add_child(layerxml,"Title",0),title);
+    } else {
+      ezxml_set_txt(ezxml_add_child(layerxml,"Title",0),tileset->name);
     }
 
     /*optional layer abstract*/
@@ -481,6 +481,7 @@ void _mapcache_service_wms_parse_request(mapcache_context *ctx, mapcache_service
       char *last, *layers;
       const char *key;
       int count=1;
+      int nallocated = 0;
       int i,layeridx;
       int x,y,z;
       mapcache_request_get_map *map_req = NULL;
@@ -566,6 +567,7 @@ void _mapcache_service_wms_parse_request(mapcache_context *ctx, mapcache_service
         map_req->getmap_format = wms_service->getmap_format;
         *request = (mapcache_request*)map_req;
       }
+      nallocated = count;
 
       /*
        * loop through all the layers to verify that they reference the requested grid,
@@ -637,21 +639,87 @@ void _mapcache_service_wms_parse_request(mapcache_context *ctx, mapcache_service
 
         /*look for dimensions*/
         if(dimtable) {
-          for(i=0; i<tileset->dimensions->nelts; i++) {
-            mapcache_dimension *dimension = APR_ARRAY_IDX(tileset->dimensions,i,mapcache_dimension*);
-            const char *value;
-            if((value = (char*)apr_table_get(params,dimension->name)) != NULL) {
-              char *tmpval = apr_pstrdup(ctx->pool,value);
-              int ok = dimension->validate(ctx,dimension,&tmpval);
-              GC_CHECK_ERROR(ctx);
-              if(ok == MAPCACHE_SUCCESS)
-                apr_table_setn(dimtable,dimension->name,tmpval);
-              else {
-                errcode = 400;
-                errmsg = apr_psprintf(ctx->pool, "dimension \"%s\" value \"%s\" fails to validate",
-                                      dimension->name, value);
-                goto proxies;
+          const char *value;
+          if(tileset->dimensions) {
+            for(i=0; i<tileset->dimensions->nelts; i++) {
+              mapcache_dimension *dimension = APR_ARRAY_IDX(tileset->dimensions,i,mapcache_dimension*);
+              if((value = (char*)apr_table_get(params,dimension->name)) != NULL) {
+                char *tmpval = apr_pstrdup(ctx->pool,value);
+                int ok = dimension->validate(ctx,dimension,&tmpval);
+                GC_CHECK_ERROR(ctx);
+                if(ok == MAPCACHE_SUCCESS)
+                  apr_table_setn(dimtable,dimension->name,tmpval);
+                else {
+                  errcode = 400;
+                  errmsg = apr_psprintf(ctx->pool, "dimension \"%s\" value \"%s\" fails to validate",
+                                        dimension->name, value);
+                  goto proxies;
+                }
               }
+            }
+          }
+          if(tileset->timedimension) {
+          /* possibly duplicate the created map/tile for each entry of the requested time dimension */
+            apr_array_header_t *timedim_selected;
+            value = apr_table_get(params,tileset->timedimension->key);
+            if(!value)
+              value = tileset->timedimension->default_value;
+            timedim_selected = mapcache_timedimension_get_entries_for_value(ctx,
+                    tileset->timedimension, tileset, grid_link->grid, &extent, value);
+            GC_CHECK_ERROR(ctx);
+            if(!timedim_selected || timedim_selected->nelts == 0) {
+              errcode = 404;
+              errmsg = apr_psprintf(ctx->pool,"no matching entry for given TIME dimension \"%s\" in tileset \"%s\"",
+                      tileset->timedimension->key, tileset->name);
+              goto proxies;
+            }
+            if(type == MAPCACHE_REQUEST_GET_TILE) {
+              int i;
+            /* we need to create more tile/map entries */
+              if(timedim_selected->nelts > 1) {
+                /* apr pools have no realloc */
+                nallocated = nallocated + timedim_selected->nelts - 1;
+                mapcache_tile** tmptiles =
+                        apr_palloc(ctx->pool, nallocated * sizeof(mapcache_tile*));
+                for(i=0;i<tile_req->ntiles;i++) {
+                  tmptiles[i] = tile_req->tiles[i];
+                }
+                tile_req->tiles = tmptiles;
+                /* end realloc workaround */
+              }
+              for(i=0;i<timedim_selected->nelts;i++) {
+                if(i) {
+                  tile_req->tiles[tile_req->ntiles] =
+                          mapcache_tileset_tile_clone(ctx->pool,tile_req->tiles[tile_req->ntiles-1]);
+                  tile_req->ntiles++;
+                }
+                apr_table_set(tile_req->tiles[tile_req->ntiles-1]->dimensions,tileset->timedimension->key,
+                        APR_ARRAY_IDX(timedim_selected,i,char*));
+              }
+            } else {
+              int i;
+            /* we need to create more tile/map entries */
+              if(timedim_selected->nelts > 1) {
+                /* apr pools have no realloc */
+                nallocated = nallocated + timedim_selected->nelts - 1;
+                mapcache_map** tmpmaps =
+                        apr_palloc(ctx->pool, nallocated * sizeof(mapcache_map*));
+                for(i=0;i<map_req->nmaps;i++) {
+                  tmpmaps[i] = map_req->maps[i];
+                }
+                map_req->maps = tmpmaps;
+                /* end realloc workaround */
+              }
+              for(i=0;i<timedim_selected->nelts;i++) {
+                if(i) {
+                  map_req->maps[map_req->nmaps] =
+                          mapcache_tileset_map_clone(ctx->pool,map_req->maps[map_req->nmaps-1]);
+                  map_req->nmaps++;
+                }
+                apr_table_set(map_req->maps[map_req->nmaps-1]->dimensions,tileset->timedimension->key,
+                        APR_ARRAY_IDX(timedim_selected,i,char*));
+              }
+              
             }
           }
         }
