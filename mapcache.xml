@@ -32,7 +32,6 @@
       <expires>3600</expires>
    </tileset>
 
-
    <default_format>JPEG</default_format>
 
    <service type="wms" enabled="true">
@@ -46,6 +45,7 @@
    <service type="kml" enabled="true"/>
    <service type="gmaps" enabled="true"/>
    <service type="ve" enabled="true"/>
+   <service type="mapguide" enabled="true"/>
    <service type="demo" enabled="true"/>
 
    <errors>report</errors>
