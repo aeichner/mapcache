@@ -569,7 +569,7 @@ void cmd_worker()
       tile->z = z;
       action = examine_tile(&cmd_ctx, tile);
 
-      if(action == MAPCACHE_CMD_SEED || action == MAPCACHE_CMD_TRANSFER) {
+      if(action == MAPCACHE_CMD_SEED || action == MAPCACHE_CMD_DELETE || action == MAPCACHE_CMD_TRANSFER) {
         //current x,y,z needs seeding, add it to the queue
         struct seed_cmd cmd;
         cmd.x = x;
@@ -963,7 +963,9 @@ int main(int argc, const char **argv)
       }
     }
     if((nClippers=OGR_L_GetFeatureCount(layer, TRUE)) == 0) {
-      return usage(argv[0],"no features in provided ogr parameters, cannot continue");
+      printf("no features in provided ogr parameters, cannot continue\n");
+      apr_terminate();
+      exit(0);
     }
 
 
@@ -1070,11 +1072,11 @@ int main(int argc, const char **argv)
 
   if (mode == MAPCACHE_CMD_TRANSFER) {
     if (!tileset_transfer_name)
-      return usage(argv[0],"tileset where tiles should be transfered to not specified");
+      return usage(argv[0],"tileset where tiles should be transferred to not specified");
 
     tileset_transfer = mapcache_configuration_get_tileset(cfg,tileset_transfer_name);
     if(!tileset_transfer)
-      return usage(argv[0], "tileset where tiles should be transfered to not found in configuration");
+      return usage(argv[0], "tileset where tiles should be transferred to not found in configuration");
   }
 
   if(old) {
@@ -1248,6 +1250,11 @@ int main(int argc, const char **argv)
     printf("\nseeded %d metatiles at %g tiles/sec\n",seededtilestot, seededtilestot/duration);
   }
   apr_terminate();
+
+  if (error_detected > 0) {
+    exit(1);  
+  }
+  
   return 0;
 }
 /* vim: ts=2 sts=2 et sw=2
