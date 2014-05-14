@@ -889,7 +889,7 @@ mapcache_image* mapcache_image_create_with_data(mapcache_context *ctx, int width
 void mapcache_image_copy_resampled_nearest(mapcache_context *ctx, mapcache_image *src, mapcache_image *dst,
     double off_x, double off_y, double scale_x, double scale_y);
 void mapcache_image_copy_resampled_bilinear(mapcache_context *ctx, mapcache_image *src, mapcache_image *dst,
-    double off_x, double off_y, double scale_x, double scale_y);
+    double off_x, double off_y, double scale_x, double scale_y, int reflect_edges);
 
 
 /**
@@ -1484,6 +1484,7 @@ char* mapcache_util_get_tile_key(mapcache_context *ctx, mapcache_tile *tile, cha
 typedef enum {
   MAPCACHE_COMPRESSION_BEST, /**< best but slowest compression*/
   MAPCACHE_COMPRESSION_FAST, /**< fast compression*/
+  MAPCACHE_COMPRESSION_DISABLE, /**< no compression*/
   MAPCACHE_COMPRESSION_DEFAULT /**< default compression*/
 } mapcache_compression_type;
 
