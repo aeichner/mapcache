@@ -58,7 +58,7 @@ mapcache_image_format_type mapcache_imageio_header_sniff(mapcache_context *ctx, 
   } else if(buffer->size >= 2 && ((unsigned char*)buffer->buf)[0] == 0xFF && ((unsigned char*)buffer->buf)[1] == 0xD8) {
     return GC_JPEG;
 #ifdef USE_GIF
-  } else if(buffer->size >= 3 && buffer->buf[0] == 'G' && buffer->buf[1] == 'I' && buffer->buf[2] == 'F') {
+  } else if(buffer->size >= 3 && ((char*)buffer->buf)[0] == 'G' && ((char*)buffer->buf)[1] == 'I' && ((char*)buffer->buf)[2] == 'F') {
     return GC_GIF;
 #endif // USE_GIF
   } else {
