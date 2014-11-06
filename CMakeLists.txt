@@ -66,16 +66,21 @@ set(CMAKE_LINK_INTERFACE_LIBRARY "")
 file(GLOB mapcache_SOURCES lib/*.c )
 
 add_library(mapcache SHARED ${mapcache_SOURCES})
+set_target_properties(mapcache PROPERTIES
+  VERSION ${MAPCACHE_VERSION_STRING}
+  SOVERSION 1
+)
 
 #options suported by the cmake builder
 option(WITH_PIXMAN "Use pixman for SSE optimized image manipulations" ON)
 option(WITH_SQLITE "Use sqlite as a cache backend" ON)
-option(WITH_BERKELEY_DB "Use sqlite as a cache backend" OFF)
+option(WITH_BERKELEY_DB "Use Berkeley DB as a cache backend" OFF)
 option(WITH_MEMCACHE "Use memcache as a cache backend (requires recent apr-util)" OFF)
 option(WITH_TIFF "Use TIFFs as a cache backend" OFF)
 option(WITH_TIFF_WRITE_SUPPORT "Enable (experimental) support for writable TIFF cache backends" OFF)
 option(WITH_GEOTIFF "Allow GeoTIFF metadata creation for TIFF cache backends" OFF)
 option(WITH_PCRE "Use PCRE for regex tests" OFF)
+option(WITH_GIF "Enable GIF read support for remote sources" OFF)
 option(WITH_MAPSERVER "Enable (experimental) support for the mapserver library" OFF)
 
 find_package(PNG)
@@ -92,6 +97,17 @@ if(JPEG_FOUND)
   target_link_libraries(mapcache ${JPEG_LIBRARY})
 else(JPEG_FOUND)
 endif(JPEG_FOUND)
+   
+if(WITH_GIF)
+  find_package(GIF)
+  if(GIF_FOUND)
+    include_directories(${GIF_INCLUDE_DIR})
+    target_link_libraries(mapcache ${GIF_LIBRARY})
+    set (USE_GIF 1)
+  else(GIF_FOUND)
+    report_optional_not_found(GIF)
+  endif(GIF_FOUND)
+endif (WITH_GIF)
    
 find_package(CURL)
 if(CURL_FOUND)
@@ -271,6 +287,7 @@ status_optional_component("TIFF" "${USE_TIFF}" "${TIFF_LIBRARY}")
 status_optional_component("GeoTIFF" "${USE_GEOTIFF}" "${GEOTIFF_LIBRARY}")
 status_optional_component("Experimental TIFF write support" "${USE_TIFF_WRITE}" "${TIFF_LIBRARY}")
 status_optional_component("PCRE" "${USE_PCRE}" "${PCRE_LIBRARY}")
+status_optional_component("GIF read support" "${USE_GIF}" "${GIF_LIBRARY}")
 status_optional_component("Experimental mapserver support" "${USE_MAPSERVER}" "${MAPSERVER_LIBRARY}")
 
 INSTALL(TARGETS mapcache DESTINATION ${CMAKE_INSTALL_LIBDIR})
