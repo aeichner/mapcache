@@ -27,6 +27,7 @@
  * DEALINGS IN THE SOFTWARE.
  *****************************************************************************/
 
+#include "mapcache-config.h"
 #ifdef USE_GIF
 
 #include "mapcache.h"
@@ -177,4 +178,4 @@ mapcache_image* _mapcache_imageio_gif_decode(mapcache_context *ctx, mapcache_buf
 
 /* vim: ai ts=3 sts=3 et sw=3
 */
-#endif // USE_GIF
+#endif /* USE_GIF */
