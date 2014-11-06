@@ -72,6 +72,7 @@ set_target_properties(mapcache PROPERTIES
 )
 
 #options suported by the cmake builder
+option(WITH_STATIC "build static version of mapcache library" ON)
 option(WITH_PIXMAN "Use pixman for SSE optimized image manipulations" ON)
 option(WITH_SQLITE "Use sqlite as a cache backend" ON)
 option(WITH_BERKELEY_DB "Use Berkeley DB as a cache backend" OFF)
@@ -82,6 +83,10 @@ option(WITH_GEOTIFF "Allow GeoTIFF metadata creation for TIFF cache backends" OF
 option(WITH_PCRE "Use PCRE for regex tests" OFF)
 option(WITH_GIF "Enable GIF read support for remote sources" OFF)
 option(WITH_MAPSERVER "Enable (experimental) support for the mapserver library" OFF)
+
+if(WITH_STATIC)
+add_library(mapcache STATIC ${mapcache_SOURCES})
+endif(WITH_STATIC)
 
 find_package(PNG)
 if(PNG_FOUND)
