@@ -78,7 +78,7 @@ static const  unsigned int InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - o
    GifByteType *Extension, *c, *rgba;
    static GifColorType *ColorMapEntry;
    static ColorMapObject *ColorMap;
-   int Row, Col, Width, Height, i,j,n, Count, transparent;
+   int Row, Col, Width, Height, i,j,n, transparent;
 
    bc.ptr       = buffer->buf;
    bc.remaining = buffer->size;
@@ -120,7 +120,7 @@ _read_desc:
          goto _error;
        if(gif->Image.Interlace) {
          /* Need to perform 4 passes on the images: */
-         for (Count = i = 0; i < 4; i++)
+         for (i = 0; i < 4; i++)
            for (j = Row + InterlacedOffset[i]; j < Row + Height;
                 j += InterlacedJumps[i])
            {
