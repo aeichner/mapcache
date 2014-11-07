@@ -65,12 +65,6 @@ set(CMAKE_LINK_INTERFACE_LIBRARY "")
 
 file(GLOB mapcache_SOURCES lib/*.c )
 
-add_library(mapcache SHARED ${mapcache_SOURCES})
-set_target_properties(mapcache PROPERTIES
-  VERSION ${MAPCACHE_VERSION_STRING}
-  SOVERSION 1
-)
-
 #options suported by the cmake builder
 option(WITH_STATIC "build static version of mapcache library" ON)
 option(WITH_PIXMAN "Use pixman for SSE optimized image manipulations" ON)
@@ -86,6 +80,16 @@ option(WITH_MAPSERVER "Enable (experimental) support for the mapserver library" 
 
 if(WITH_STATIC)
 add_library(mapcache STATIC ${mapcache_SOURCES})
+set_target_properties(mapcache PROPERTIES
+  VERSION ${MAPCACHE_VERSION_STRING}
+  COMPILE_FLAGS -fPIC
+)
+else(WITH_STATIC)
+add_library(mapcache SHARED ${mapcache_SOURCES})
+set_target_properties(mapcache PROPERTIES
+  VERSION ${MAPCACHE_VERSION_STRING}
+  SOVERSION 1
+)
 endif(WITH_STATIC)
 
 find_package(PNG)
